@@ -19,9 +19,18 @@ import os, os.path
 #import re
 #import tempfile
 #import optparse
-#import sys
+import sys
 #import commands
 import hashlib
+
+if len(sys.argv)==2:
+    if sys.argv[1]=="check":
+        mode="c"
+    elif sys.argv[1]=="update":
+        mode="u"
+    else:
+        print "argument must be check or update"
+        sys.exit(1)
 
 
 directories=[os.getcwd()]
@@ -34,7 +43,11 @@ def announce_and_execute(command, safe=False):
 
 def md5_file(fullpath):
     m=hashlib.md5()
-    m.update(open(fullpath).read())
+    file=open(fullpath)
+    tmp=file.read(1024*1024)
+    while(tmp!=""):
+        m.update(tmp)
+        tmp=file.read(1024*1024)
     return m.hexdigest()
 
 def create_md5_file(fullpath):
@@ -54,15 +67,18 @@ while len(directories)>0:
             if len(fullpath)<=4 or (len(fullpath) >4 and not fullpath[-4:]==".md5"):
                 if os.path.isfile(fullpath+".md5"):
                     if os.path.getmtime(fullpath+".md5") < os.path.getmtime(fullpath):
-                        create_md5_file(fullpath)
-                    else:
+                        if mode==None or mode=="u":
+                            create_md5_file(fullpath)
+                    elif mode==None or mode=="c":
                         md5computed=md5_file(fullpath)+"\n"
                         md5stored=open(fullpath+".md5",'r').read()
                         if md5computed != md5stored:
                             print "md5sum for "+fullpath+" does not match! creating new..."
                             create_md5_file(fullpath)
-                            
-                else:
+                        else:
+                            print fullpath+" ok"
+
+                elif mode==None or mode=="u":
                     create_md5_file(fullpath)
 
             else:
