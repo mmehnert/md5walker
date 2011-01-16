@@ -23,6 +23,8 @@ import sys
 #import commands
 import hashlib
 
+mode=None
+
 if len(sys.argv)==2:
     if sys.argv[1]=="check":
         mode="c"
@@ -30,6 +32,8 @@ if len(sys.argv)==2:
         mode="u"
     else:
         print "argument must be check or update"
+        print "check only checks. update only updates missing or updated files"
+        print "without any arguments, both is done, plus not matching sums with correct mtimes are updated."
         sys.exit(1)
 
 
@@ -73,10 +77,13 @@ while len(directories)>0:
                         md5computed=md5_file(fullpath)+"\n"
                         md5stored=open(fullpath+".md5",'r').read()
                         if md5computed != md5stored:
-                            print "md5sum for "+fullpath+" does not match! creating new..."
-                            create_md5_file(fullpath)
+                            print "md5sum for "+fullpath+" does not match! "
+                            if mode==None:
+                                print "creating new..."
+                                create_md5_file(fullpath)
                         else:
-                            print fullpath+" ok"
+                            continue
+                            #print fullpath+" ok"
 
                 elif mode==None or mode=="u":
                     create_md5_file(fullpath)
